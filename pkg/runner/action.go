@@ -170,7 +170,7 @@ func runActionImpl(step actionStep, actionDir string, remoteAction *remoteAction
 		}
 
 		actionLocation := path.Join(actionDir, actionPath)
-		actionName, containerActionDir := getContainerActionPaths(stepModel, actionLocation, rc)
+		actionName, containerActionDir := getContainerActionPaths(ctx, stepModel, actionLocation, rc)
 
 		logger.Debugf("type=%v actionDir=%s actionPath=%s workdir=%s actionCacheDir=%s actionName=%s containerActionDir=%s", stepModel.Type(), actionDir, actionPath, rc.Config.Workdir, rc.ActionCacheDir(), actionName, containerActionDir)
 
@@ -406,7 +406,7 @@ func newStepContainer(ctx context.Context, step step, image string, cmd []string
 	envList = append(envList, fmt.Sprintf("%s=%s", "RUNNER_ARCH", container.RunnerArch(ctx)))
 	envList = append(envList, fmt.Sprintf("%s=%s", "RUNNER_TEMP", "/tmp"))
 
-	binds, mounts := rc.GetBindsAndMounts()
+	binds, mounts := rc.GetBindsAndMounts(ctx)
 	networkMode := fmt.Sprintf("container:%s", rc.jobContainerName())
 	var workdir string
 	if rc.IsHostEnv(ctx) {
@@ -459,7 +459,7 @@ func populateEnvsFromInput(ctx context.Context, env *map[string]string, action *
 	}
 }
 
-func getContainerActionPaths(step *model.Step, actionDir string, rc *RunContext) (string, string) {
+func getContainerActionPaths(ctx context.Context, step *model.Step, actionDir string, rc *RunContext) (string, string) {
 	actionName := ""
 	containerActionDir := "."
 	if step.Type() != model.StepTypeUsesActionRemote {
@@ -468,7 +468,7 @@ func getContainerActionPaths(step *model.Step, actionDir string, rc *RunContext)
 		actionName = "./" + actionName
 	} else if step.Type() == model.StepTypeUsesActionRemote {
 		actionName = getOsSafeRelativePath(actionDir, rc.ActionCacheDir())
-		containerActionDir = rc.JobContainer.GetActPath() + "/actions/" + actionName
+		containerActionDir = rc.GetActPath(ctx) + "/actions/" + actionName
 	}
 
 	if actionName == "" {
@@ -546,7 +546,7 @@ func runPreStep(step actionStep) common.Executor {
 			actionLocation = actionDir
 		}
 
-		actionName, containerActionDir := getContainerActionPaths(stepModel, actionLocation, rc)
+		actionName, containerActionDir := getContainerActionPaths(ctx, stepModel, actionLocation, rc)
 
 		x := action.Runs.Using
 		switch {
@@ -650,7 +650,7 @@ func runPostStep(step actionStep) common.Executor {
 			actionLocation = actionDir
 		}
 
-		actionName, containerActionDir := getContainerActionPaths(stepModel, actionLocation, rc)
+		actionName, containerActionDir := getContainerActionPaths(ctx, stepModel, actionLocation, rc)
 
 		x := action.Runs.Using
 		switch {

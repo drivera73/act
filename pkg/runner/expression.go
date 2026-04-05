@@ -201,12 +201,12 @@ func getHashFilesFunction(ctx context.Context, rc *RunContext) func(v []reflect.
 			}
 
 			stdout, stderr := rc.JobContainer.ReplaceLogWriter(hout, herr)
-			_ = rc.JobContainer.Copy(rc.JobContainer.GetActPath(), &container.FileEntry{
+			_ = rc.JobContainer.Copy(rc.GetActPath(ctx), &container.FileEntry{
 				Name: name,
 				Mode: 0o644,
 				Body: hashfiles,
 			}).
-				Then(rc.execJobContainer([]string{rc.GetNodeToolFullPath(ctx), path.Join(rc.JobContainer.GetActPath(), name)},
+				Then(rc.execJobContainer([]string{rc.GetNodeToolFullPath(ctx), path.Join(rc.GetActPath(ctx), name)},
 					env, "", "")).
 				Finally(func(context.Context) error {
 					rc.JobContainer.ReplaceLogWriter(stdout, stderr)

@@ -57,7 +57,7 @@ func processRunnerSummaryCommand(ctx context.Context, fileName string, rc *RunCo
 	if common.Dryrun(ctx) {
 		return nil
 	}
-	pathTar, err := rc.JobContainer.GetContainerArchive(ctx, path.Join(rc.JobContainer.GetActPath(), fileName))
+	pathTar, err := rc.JobContainer.GetContainerArchive(ctx, path.Join(rc.GetActPath(ctx), fileName))
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func processRunnerSummaryCommand(ctx context.Context, fileName string, rc *RunCo
 
 func processRunnerEnvFileCommand(ctx context.Context, fileName string, rc *RunContext, setter func(context.Context, map[string]string, string)) error {
 	env := map[string]string{}
-	err := rc.JobContainer.UpdateFromEnv(path.Join(rc.JobContainer.GetActPath(), fileName), &env)(ctx)
+	err := rc.JobContainer.UpdateFromEnv(path.Join(rc.GetActPath(ctx), fileName), &env)(ctx)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func runStepExecutor(step step, stage stepStage, executor common.Executor) commo
 		logger.Infof("\u2B50 Run %s %s", stage, stepString)
 
 		// Prepare and clean Runner File Commands
-		actPath := rc.JobContainer.GetActPath()
+		actPath := rc.GetActPath(ctx)
 
 		outputFileCommand := path.Join("workflow", "outputcmd.txt")
 		(*step.getEnv())["GITHUB_OUTPUT"] = path.Join(actPath, outputFileCommand)

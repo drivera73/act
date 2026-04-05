@@ -77,7 +77,7 @@ func (sr *stepRun) setupShellCommandExecutor() common.Executor {
 		}
 
 		rc := sr.getRunContext()
-		return rc.JobContainer.Copy(rc.JobContainer.GetActPath(), &container.FileEntry{
+		return rc.JobContainer.Copy(rc.GetActPath(ctx), &container.FileEntry{
 			Name: scriptName,
 			Mode: 0o755,
 			Body: script,
@@ -138,7 +138,7 @@ func (sr *stepRun) setupShellCommand(ctx context.Context) (name, script string, 
 	}
 
 	rc := sr.getRunContext()
-	scriptPath := fmt.Sprintf("%s/%s", rc.JobContainer.GetActPath(), name)
+	scriptPath := fmt.Sprintf("%s/%s", rc.GetActPath(ctx), name)
 	sr.cmdline = strings.Replace(scCmd, `{0}`, scriptPath, 1)
 	sr.cmd, err = shellquote.Split(sr.cmdline)
 

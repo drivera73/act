@@ -124,7 +124,7 @@ func getDockerDaemonSocketMountPath(daemonPath string) string {
 }
 
 // Returns the binds and mounts for the container, resolving paths as appropriate
-func (rc *RunContext) GetBindsAndMounts() ([]string, map[string]string) {
+func (rc *RunContext) GetBindsAndMounts(ctx context.Context) ([]string, map[string]string) {
 	name := rc.jobContainerName()
 
 	if rc.Config.ContainerDaemonSocket == "" {
@@ -143,7 +143,7 @@ func (rc *RunContext) GetBindsAndMounts() ([]string, map[string]string) {
 		mounts := map[string]string{}
 		// Permission issues?
 		// binds = append(binds, hostEnv.ToolCache+":/opt/hostedtoolcache")
-		binds = append(binds, hostEnv.GetActPath()+":"+ext.GetActPath())
+		binds = append(binds, hostEnv.GetActPath()+":"+rc.GetActPath(ctx))
 		binds = append(binds, hostEnv.ToContainerPath(rc.Config.Workdir)+":"+ext.ToContainerPath(rc.Config.Workdir))
 		return binds, mounts
 	}
@@ -239,7 +239,7 @@ func (rc *RunContext) startHostEnvironment() common.Executor {
 		}
 
 		return common.NewPipelineExecutor(
-			rc.JobContainer.Copy(rc.JobContainer.GetActPath()+"/", &container.FileEntry{
+			rc.JobContainer.Copy(rc.GetActPath(ctx)+"/", &container.FileEntry{
 				Name: "workflow/event.json",
 				Mode: 0o644,
 				Body: rc.EventJSON,
@@ -283,7 +283,7 @@ func (rc *RunContext) startJobContainer() common.Executor {
 		envList = append(envList, fmt.Sprintf("%s=%s", "LANG", "C.UTF-8")) // Use same locale as GitHub Actions
 
 		ext := container.LinuxContainerEnvironmentExtensions{}
-		binds, mounts := rc.GetBindsAndMounts()
+		binds, mounts := rc.GetBindsAndMounts(ctx)
 
 		// specify the network to which the container will connect when `docker create` stage. (like execute command line: docker create --network <networkName> <image>)
 		// if using service containers, will create a new network for the containers.
@@ -422,7 +422,7 @@ func (rc *RunContext) startJobContainer() common.Executor {
 			rc.startServiceContainers(networkName),
 			rc.JobContainer.Create(rc.Config.ContainerCapAdd, rc.Config.ContainerCapDrop),
 			rc.JobContainer.Start(false),
-			rc.JobContainer.Copy(rc.JobContainer.GetActPath()+"/", &container.FileEntry{
+			rc.JobContainer.Copy(rc.GetActPath(ctx)+"/", &container.FileEntry{
 				Name: "workflow/event.json",
 				Mode: 0o644,
 				Body: rc.EventJSON,
@@ -908,7 +908,7 @@ func (rc *RunContext) getGithubContext(ctx context.Context) *model.GithubContext
 		Workspace:        rc.Config.Env["GITHUB_WORKSPACE"],
 	}
 	if rc.JobContainer != nil {
-		ghc.EventPath = rc.JobContainer.GetActPath() + "/workflow/event.json"
+		ghc.EventPath = rc.GetActPath(ctx) + "/workflow/event.json"
 		ghc.Workspace = rc.JobContainer.ToContainerPath(rc.Config.Workdir)
 	}
 
