@@ -14,7 +14,6 @@ type Input struct {
 	autodetectEvent                    bool
 	eventPath                          string
 	reuseContainers                    bool
-	uniqueContainerNames               bool
 	bindWorkdir                        bool
 	secrets                            []string
 	vars                               []string
