@@ -247,7 +247,7 @@ func (impl *interperterImpl) evaluateArrayDeref(arrayDerefNode *actionlint.Array
 
 func (impl *interperterImpl) getPropertyValue(left reflect.Value, property string) (value interface{}, err error) {
 	switch left.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return impl.getPropertyValue(left.Elem(), property)
 
 	case reflect.Struct:
@@ -318,7 +318,7 @@ func (impl *interperterImpl) getPropertyValue(left reflect.Value, property strin
 
 func (impl *interperterImpl) getPropertyValueDereferenced(left reflect.Value, property string) (value interface{}, err error) {
 	switch left.Kind() {
-	case reflect.Ptr:
+	case reflect.Pointer:
 		return impl.getPropertyValue(left, property)
 
 	case reflect.Struct:
@@ -345,7 +345,7 @@ func (impl *interperterImpl) getPropertyValueDereferenced(left reflect.Value, pr
 }
 
 func (impl *interperterImpl) getMapValue(value reflect.Value) (interface{}, error) {
-	if value.Kind() == reflect.Ptr {
+	if value.Kind() == reflect.Pointer {
 		return impl.getMapValue(value.Elem())
 	}
 
